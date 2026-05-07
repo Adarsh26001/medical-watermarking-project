@@ -3,6 +3,3 @@ uvicorn
 opencv-python
 numpy
 python-multipart
-scikit-image
-matplotlib
-pillow

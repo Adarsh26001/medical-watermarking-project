@@ -1,32 +1,465 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Medical Image Watermarking System</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical Image Watermark Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #1f2937; 
+      padding: 32px 24px;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    /* Animated background layer */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 200%;
+      background: 
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="50" font-size="40" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,0.05)">🏥</text></svg>') 0% 0% / 200px 200px repeat,
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="50" font-size="40" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,0.05)">💊</text></svg>') 50px 50px / 250px 250px repeat,
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="50" font-size="40" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,0.05)">👨‍⚕️</text></svg>') 100px 100px / 300px 300px repeat,
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="50" font-size="40" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,0.05)">⚕️</text></svg>') 150px 0px / 280px 280px repeat;
+      animation: moveBackground 20s linear infinite, moveBackgroundY 25s linear infinite;
+      z-index: 0;
+      opacity: 0.8;
+    }
+    
+    @keyframes moveBackground {
+      0% {
+        transform: translateX(0) translateY(0);
+      }
+      100% {
+        transform: translateX(-100px) translateY(-50px);
+      }
+    }
+    
+    @keyframes moveBackgroundY {
+      0% {
+        transform: translateY(0);
+      }
+      100% {
+        transform: translateY(-100px);
+      }
+    }
+    
+    /* Floating particles */
+    .bg-particle {
+      position: fixed;
+      font-size: 2rem;
+      opacity: 0.1;
+      pointer-events: none;
+      z-index: 0;
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-30px) rotate(180deg);
+      }
+    }
+    
+    .bg-particle:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; font-size: 3rem; }
+    .bg-particle:nth-child(2) { top: 20%; right: 15%; animation-delay: 1s; font-size: 2.5rem; }
+    .bg-particle:nth-child(3) { top: 50%; left: 5%; animation-delay: 2s; font-size: 3.5rem; }
+    .bg-particle:nth-child(4) { bottom: 15%; right: 10%; animation-delay: 3s; font-size: 2.8rem; }
+    .bg-particle:nth-child(5) { top: 60%; right: 5%; animation-delay: 1.5s; font-size: 3rem; }
+    .bg-particle:nth-child(6) { bottom: 30%; left: 15%; animation-delay: 2.5s; font-size: 2.6rem; }
+    .bg-particle:nth-child(7) { top: 35%; left: 50%; animation-delay: 0.5s; font-size: 3.2rem; }
+    .bg-particle:nth-child(8) { bottom: 20%; right: 50%; animation-delay: 3.5s; font-size: 2.9rem; }
+    
+    .container { 
+      max-width: 1000px; 
+      margin: 0 auto; 
+      background: #ffffff; 
+      border-radius: 24px; 
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+      padding: 40px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      border-bottom: 3px solid #667eea;
+      padding-bottom: 24px;
+    }
+    
+    h1 { 
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      color: #6b7280;
+      font-size: 1rem;
+    }
+    
+    .grid { display: grid; gap: 24px; }
+    
+    .card { 
+      padding: 24px; 
+      border: 2px solid #e5e7eb;
+      border-radius: 16px; 
+      background: #fafbfc;
+      transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+      border-color: #667eea;
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+    }
+    
+    .card.success {
+      background: #f0fdf4;
+      border-color: #22c55e;
+    }
+    
+    .card.error {
+      background: #fef2f2;
+      border-color: #ef4444;
+    }
+    
+    button { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; 
+      border: none; 
+      border-radius: 12px; 
+      padding: 14px 28px; 
+      cursor: pointer; 
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    button:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    label { 
+      display: block; 
+      margin-bottom: 12px; 
+      font-weight: 700;
+      color: #1f2937;
+      font-size: 1.05rem;
+    }
+    
+    input[type=file], input[type=text], textarea { 
+      width: 100%; 
+      padding: 14px 16px; 
+      border: 2px solid #e5e7eb; 
+      border-radius: 12px; 
+      background: #ffffff;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+    
+    input[type=file]:focus, input[type=text]:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    textarea {
+      font-family: 'Courier New', monospace;
+      resize: vertical;
+    }
+    
+    .file-input-label {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #f3f4f6;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid #e5e7eb;
+      font-weight: 600;
+    }
+    
+    .file-input-label:hover {
+      background: #e5e7eb;
+      border-color: #667eea;
+    }
+    
+    #preview { 
+      max-width: 100%; 
+      border-radius: 16px; 
+      margin-top: 16px; 
+      border: 2px solid #e5e7eb;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    #preview:hover {
+      transform: scale(1.02);
+    }
+    
+    .status { 
+      padding: 18px 20px; 
+      border-radius: 12px; 
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #1e40af;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-left: 4px solid #3b82f6;
+      animation: slideIn 0.3s ease;
+    }
+    
+    .status::before {
+      content: "ℹ";
+      font-size: 1.5rem;
+    }
+    
+    .status.tampered { 
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+      border-left-color: #dc2626;
+    }
+    
+    .status.tampered::before {
+      content: "⚠";
+    }
+    
+    .status.success {
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      color: #15803d;
+      border-left-color: #22c55e;
+    }
+    
+    .status.success::before {
+      content: "✓";
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .small { 
+      font-size: 0.95rem; 
+      color: #6b7280;
+      margin-top: 8px;
+    }
+    
+    .inline { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 16px;
+    }
+    
+    .upload-info {
+      display: inline-block;
+      margin-left: 12px;
+      padding: 4px 12px;
+      background: #dbeafe;
+      color: #1e40af;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        padding: 24px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .inline {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
+  <!-- Floating medical particles -->
+  <div class="bg-particle">🏥</div>
+  <div class="bg-particle">💊</div>
+  <div class="bg-particle">👨‍⚕️</div>
+  <div class="bg-particle">⚕️</div>
+  <div class="bg-particle">🩺</div>
+  <div class="bg-particle">💉</div>
+  <div class="bg-particle">👩‍⚕️</div>
+  <div class="bg-particle">❤️</div>
+  
+  <div class="container">
+    <div class="header">
+      <h1>🏥 Medical Image Watermark</h1>
+      <p class="subtitle">Secure authentication & integrity verification</p>
+    </div>
 
-<div class="container">
+    <div class="grid">
+      <div class="card">
+        <label for="imageFile">📁 Select Medical Image</label>
+        <input id="imageFile" type="file" accept="image/*" />
+        <p class="small">Supported formats: JPG, PNG, GIF, WebP (Max 50MB)</p>
+      </div>
 
-<h1>AI-Powered Medical Image Watermarking</h1>
+      <div class="card">
+        <label>🛡️ Actions</label>
+        <div class="inline">
+          <button id="embedBtn">
+            🔐 Embed Watermark
+          </button>
+          <button id="verifyBtn">
+            ✓ Verify Image
+          </button>
+        </div>
+      </div>
 
-<div class="card">
-<h2>Upload Medical Image</h2>
-<input type="file" id="embedFile">
-<button onclick="embedImage()">Embed Watermark</button>
-<p id="embedResult"></p>
-<img id="embedOutput">
-</div>
+      <div class="card">
+        <label for="hashValue">🔑 Watermark Hash (SHA-256)</label>
+        <textarea id="hashValue" rows="2" readonly placeholder="Hash will appear here after embedding..."></textarea>
+        <p class="small">This unique fingerprint proves the image authenticity</p>
+      </div>
 
-<div class="card">
-<h2>Verify Image</h2>
-<input type="file" id="verifyFile">
-<button onclick="verifyImage()">Verify Image</button>
-<p id="verifyResult"></p>
-</div>
+      <div class="card">
+        <label for="hashInput">🔍 Hash for Verification</label>
+        <input id="hashInput" type="text" placeholder="Paste the original hash here to verify..." />
+        <p class="small">Compare against the original to detect tampering</p>
+      </div>
 
-</div>
+      <div class="card" id="statusCard">
+        <div id="status" class="status">🔄 Ready to process your image</div>
+      </div>
 
-<script src="script.js"></script>
+      <div class="card">
+        <label>📸 Output Preview</label>
+        <img id="preview" alt="Processing..." style="display: none;" />
+        <p id="noPreview" class="small" style="color: #9ca3af; text-align: center; padding: 40px 20px;">Preview will appear here after embedding</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const apiBase = "http://127.0.0.1:8000";
+    const imageFile = document.getElementById("imageFile");
+    const embedBtn = document.getElementById("embedBtn");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const status = document.getElementById("status");
+    const statusCard = document.getElementById("statusCard");
+    const hashValue = document.getElementById("hashValue");
+    const hashInput = document.getElementById("hashInput");
+    const preview = document.getElementById("preview");
+    const noPreview = document.getElementById("noPreview");
+
+    function setStatus(message, type = "info") {
+      status.textContent = message;
+      status.className = "status";
+      
+      if (type === "tampered") {
+        status.classList.add("tampered");
+        statusCard.classList.remove("success");
+        statusCard.classList.add("error");
+      } else if (type === "success") {
+        status.classList.add("success");
+        statusCard.classList.add("success");
+        statusCard.classList.remove("error");
+      } else {
+        statusCard.classList.remove("success", "error");
+      }
+    }
+
+    async function sendFile(endpoint, payload) {
+      const response = await fetch(`${apiBase}${endpoint}`, {
+        method: "POST",
+        body: payload,
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.detail || "Server request failed.");
+      }
+      return response.json();
+    }
+
+    embedBtn.addEventListener("click", async () => {
+      if (!imageFile.files.length) {
+        setStatus("⚠️ Please select an image first.");
+        return;
+      }
+      setStatus("⏳ Processing... Adding watermark...");
+      const form = new FormData();
+      form.append("file", imageFile.files[0]);
+
+      try {
+        const data = await sendFile("/embed", form);
+        hashValue.value = data.hash;
+        hashInput.value = data.hash;
+        preview.src = `${apiBase}${data.output_url}`;
+        preview.style.display = "block";
+        noPreview.style.display = "none";
+        setStatus("✓ Watermark embedded successfully! Hash copied.", "success");
+      } catch (error) {
+        setStatus(`❌ Error: ${error.message || "Embedding failed."}`);
+      }
+    });
+
+    verifyBtn.addEventListener("click", async () => {
+      if (!imageFile.files.length) {
+        setStatus("⚠️ Please select an image to verify.");
+        return;
+      }
+      const referenceHash = hashInput.value.trim();
+      if (!referenceHash) {
+        setStatus("⚠️ Enter the reference hash before verification.");
+        return;
+      }
+      setStatus("⏳ Verifying... Checking authenticity...");
+      const form = new FormData();
+      form.append("file", imageFile.files[0]);
+      form.append("reference_hash", referenceHash);
+
+      try {
+        const data = await sendFile("/verify", form);
+        if (data.authentic) {
+          setStatus("✓ Authentic image verified successfully!", "success");
+          preview.style.display = "none";
+          noPreview.style.display = "block";
+        } else {
+          setStatus("⚠️ Tampered image detected - integrity compromised!", "tampered");
+          preview.style.display = "none";
+          noPreview.style.display = "block";
+        }
+      } catch (error) {
+        setStatus(`❌ Error: ${error.message || "Verification failed."}`);
+      }
+    });
+  </script>
 </body>
 </html>
