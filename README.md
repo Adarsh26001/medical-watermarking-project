@@ -1,4 +1,4 @@
-# AI-Powered Secure Medical Image Watermarking System
+# Secure Medical Image Watermarking System
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
@@ -6,7 +6,7 @@
 
 ## 📋 Overview
 
-This project implements a robust **AI-powered medical image watermarking system** designed for secure authentication and tamper detection of medical images. The system uses advanced digital watermarking techniques combined with cryptographic hashing to ensure the integrity and authenticity of medical images while maintaining diagnostic quality.
+This project implements a robust **medical image watermarking system** designed for secure authentication and tamper detection of medical images. The system uses digital watermarking techniques combined with cryptographic hashing to ensure the integrity and authenticity of medical images while maintaining diagnostic quality.
 
 ### 🎯 Key Features
 
