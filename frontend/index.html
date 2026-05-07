@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Medical Image Watermarking System</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+<h1>AI-Powered Medical Image Watermarking</h1>
+
+<div class="card">
+<h2>Upload Medical Image</h2>
+<input type="file" id="embedFile">
+<button onclick="embedImage()">Embed Watermark</button>
+<p id="embedResult"></p>
+<img id="embedOutput">
+</div>
+
+<div class="card">
+<h2>Verify Image</h2>
+<input type="file" id="verifyFile">
+<button onclick="verifyImage()">Verify Image</button>
+<p id="verifyResult"></p>
+</div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
