@@ -1,110 +1,96 @@
 /**
  * Medical Image Watermarking Frontend Script
  *
- * Handles client-side interactions for watermark embedding and verification.
- * Communicates with FastAPI backend for image processing operations.
+ * This script manages the user interface for embedding and verifying
+ * medical image watermarks. It communicates with the FastAPI backend
+ * and shows the result in a friendly way.
  *
  * Author: Adarsh
  * License: MIT
  */
 
-/**
- * Embed watermark in uploaded medical image
- * Sends image to backend API and displays results
- */
+const apiBaseUrl = 'http://127.0.0.1:8000';
+
+function showMessage(element, text, type = 'info') {
+    const colors = {
+        info: '#2563eb',
+        success: '#16a34a',
+        error: '#dc2626',
+    };
+    element.innerHTML = `<span style="color: ${colors[type]};">${text}</span>`;
+}
+
 async function embedImage() {
     const fileInput = document.getElementById('embedFile');
     const resultDiv = document.getElementById('embedResult');
     const outputImg = document.getElementById('embedOutput');
 
-    // Validate file selection
-    if (!fileInput.files[0]) {
-        resultDiv.innerHTML = '<span style="color: red;">❌ Please select an image file first.</span>';
+    if (!fileInput.files.length) {
+        showMessage(resultDiv, '❌ Please choose a medical image first.', 'error');
         return;
     }
 
-    // Show loading state
-    resultDiv.innerHTML = '<span style="color: blue;">⏳ Processing image...</span>';
+    showMessage(resultDiv, '⏳ Uploading image and embedding watermark...', 'info');
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
 
     try {
-        // Prepare form data
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-
-        // Send to backend API
-        const response = await fetch('http://127.0.0.1:8000/embed', {
+        const response = await fetch(`${apiBaseUrl}/embed`, {
             method: 'POST',
-            body: formData
+            body: formData,
         });
-
         const data = await response.json();
 
-        if (response.ok) {
-            // Success: Display results
-            resultDiv.innerHTML = `
-                <span style="color: green;">✔ ${data.message}</span><br>
-                <strong>SHA-256 Hash:</strong> <code>${data.hash}</code>
-            `;
-
-            // Display watermarked image
-            outputImg.src = `http://127.0.0.1:8000/${data.output}`;
-            outputImg.style.display = 'block';
-        } else {
-            // API error
-            resultDiv.innerHTML = `<span style="color: red;">❌ Error: ${data.detail || 'Unknown error'}</span>`;
+        if (!response.ok) {
+            showMessage(resultDiv, `❌ ${data.detail || data.message || 'Failed to embed watermark.'}`, 'error');
+            return;
         }
 
+        showMessage(resultDiv, `✔ ${data.message} Hash: ${data.hash}`, 'success');
+        const outputUrl = data.output_url ? `${apiBaseUrl}${data.output_url}` : `${apiBaseUrl}/${data.output}`;
+        outputImg.src = outputUrl;
+        outputImg.style.display = 'block';
+        outputImg.alt = 'Watermarked medical image preview';
     } catch (error) {
-        // Network error
-        resultDiv.innerHTML = '<span style="color: red;">❌ Network error. Please check if the backend server is running.</span>';
+        showMessage(resultDiv, '❌ Unable to contact the backend. Please start the server and try again.', 'error');
         console.error('Embed error:', error);
     }
 }
 
-/**
- * Verify authenticity of uploaded image
- * Compares image hash with stored original hash
- */
 async function verifyImage() {
     const fileInput = document.getElementById('verifyFile');
     const resultDiv = document.getElementById('verifyResult');
 
-    // Validate file selection
-    if (!fileInput.files[0]) {
-        resultDiv.innerHTML = '<span style="color: red;">❌ Please select an image file first.</span>';
+    if (!fileInput.files.length) {
+        showMessage(resultDiv, '❌ Please choose an image to verify.', 'error');
         return;
     }
 
-    // Show loading state
-    resultDiv.innerHTML = '<span style="color: blue;">⏳ Verifying image...</span>';
+    showMessage(resultDiv, '⏳ Verifying image...', 'info');
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
 
     try {
-        // Prepare form data
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-
-        // Send to backend API
-        const response = await fetch('http://127.0.0.1:8000/verify', {
+        const response = await fetch(`${apiBaseUrl}/verify`, {
             method: 'POST',
-            body: formData
+            body: formData,
         });
-
         const data = await response.json();
 
-        if (response.ok) {
-            if (data.status === 'Authentic') {
-                resultDiv.innerHTML = '<span style="color: green;">✅ Image is Authentic - No tampering detected</span>';
-            } else {
-                resultDiv.innerHTML = '<span style="color: red;">❌ Image has been Tampered - Security breach detected</span>';
-            }
-        } else {
-            // API error
-            resultDiv.innerHTML = `<span style="color: red;">❌ Error: ${data.detail || 'Unknown error'}</span>`;
+        if (!response.ok) {
+            showMessage(resultDiv, `❌ ${data.detail || data.message || 'Verification failed.'}`, 'error');
+            return;
         }
 
+        if (data.status === 'Authentic') {
+            showMessage(resultDiv, '✅ The image is authentic and has not been tampered with.', 'success');
+        } else {
+            showMessage(resultDiv, '❌ The image appears to have been tampered with.', 'error');
+        }
     } catch (error) {
-        // Network error
-        resultDiv.innerHTML = '<span style="color: red;">❌ Network error. Please check if the backend server is running.</span>';
+        showMessage(resultDiv, '❌ Unable to contact the backend. Please start the server and try again.', 'error');
         console.error('Verify error:', error);
     }
 }

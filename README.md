@@ -101,10 +101,10 @@ python testing.py
 
 ### Watermarking Algorithm
 
-- **ROI Selection**: Focuses on central region (25%-75% of image)
-- **Embedding Method**: Additive watermarking with intensity value 10
-- **Hash Generation**: SHA-256 of ROI pixel data
-- **Verification**: Hash comparison for tamper detection
+- **ROI Selection**: Focuses on the central region (25%-75% of image)
+- **Embedding Method**: Pattern-based ROI watermarking using a deterministic sinusoidal blend
+- **Hash Generation**: SHA-256 hashing of the original ROI for integrity assurance
+- **Verification**: ROI hash comparison to detect tampering and unauthorized changes
 
 ### Performance Metrics
 
